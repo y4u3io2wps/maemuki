@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>前向き授業</title>
+<script src="api.js"></script>
+<style>
+/* ============================================================
+   CSS変数・リセット
+   ============================================================ */
+:root {
+  --primary: #FF6B6B;
+  --primary-light: #FF8E8E;
+  --primary-pale: #FFF0F0;
+  --accent: #FFD93D;
+  --accent2: #6BCB77;
+  --accent3: #4D96FF;
+  --bg: #FFF8F5;
+  --bg2: #FFFFFF;
+  --text: #2D2D2D;
+  --text2: #666666;
+  --text3: #999999;
+  --border: #F0E8E8;
+  --shadow: 0 4px 20px rgba(255,107,107,0.12);
+  --shadow2: 0 2px 12px rgba(0,0,0,0.08);
+  --radius: 20px;
+  --radius-sm: 12px;
+  --transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
+  --subject-color: #D4A373;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;background:var(--bg);font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;color:var(--text);line-height:1.6;}
+
+.app{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 0 40px;}
+.panel{width:100%;max-width:480px;padding:24px 20px;animation:fadeIn 0.25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.hidden{display:none!important;}
+
+.app-header{width:100%;max-width:480px;padding:20px 20px 0;display:flex;align-items:center;justify-content:space-between;}
+.app-logo{font-size:1.1rem;font-weight:800;color:var(--primary);letter-spacing:-0.02em;}
+.app-logo span{color:var(--text);}
+.header-user{font-size:0.8rem;color:var(--text2);background:white;padding:6px 14px;border-radius:30px;box-shadow:var(--shadow2);}
+
+.back-btn{display:flex;align-items:center;gap:6px;background:none;border:none;color:var(--text2);font-size:0.9rem;cursor:pointer;padding:8px 0;margin-bottom:8px;font-family:inherit;}
+.back-btn:active{color:var(--primary);}
+.back-arrow{font-size:1.1rem;}
+
+.card{background:white;border-radius:var(--radius);box-shadow:var(--shadow);padding:28px 24px;margin-bottom:16px;}
+.card-sm{background:white;border-radius:var(--radius-sm);box-shadow:var(--shadow2);padding:18px 16px;margin-bottom:12px;}
+
+.page-title{font-size:1.5rem;font-weight:800;color:var(--text);margin-bottom:6px;letter-spacing:-0.02em;}
+.page-subtitle{font-size:0.85rem;color:var(--text2);margin-bottom:24px;}
+.section-label{font-size:0.75rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;}
+
+.divider{display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:0.8rem;margin:16px 0;}
+
+.form-group{margin-bottom:16px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.form-row .form-group{margin-bottom:0;}
+.form-label{display:block;font-size:0.85rem;font-weight:600;color:var(--text);margin-bottom:6px;}
+.form-hint{font-size:0.72rem;color:var(--text3);margin-top:4px;}
+.form-input{width:100%;padding:14px 16px;border:2px solid var(--border);border-radius:var(--radius-sm);font-size:1rem;font-family:inherit;background:white;color:var(--text);transition:var(--transition);}
+.form-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(255,107,107,0.12);}
+.form-input::placeholder{color:var(--text3);}
+.form-input.error{border-color:#EF4444;box-shadow:0 0 0 3px rgba(239,68,68,0.1);}
+select.form-input{appearance:none;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'%3E%3Cpath fill='%23999' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;cursor:pointer;}
+textarea.form-input{resize:vertical;min-height:60px;}
+
+.btn{width:100%;padding:16px;border:none;border-radius:40px;font-size:1rem;font-weight:700;font-family:inherit;cursor:pointer;transition:var(--transition);margin-bottom:10px;}
+.btn:active{transform:scale(0.97);}
+.btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:white;box-shadow:0 4px 16px rgba(255,107,107,0.35);}
+.btn-primary:hover{box-shadow:0 6px 20px rgba(255,107,107,0.45);}
+.btn-secondary{background:white;color:var(--text);border:2px solid var(--border);}
+.btn-secondary:hover{border-color:var(--primary);color:var(--primary);}
+.btn-accent{background:linear-gradient(135deg,var(--accent3),#74b0ff);color:white;box-shadow:0 4px 16px rgba(77,150,255,0.3);}
+.btn-green{background:linear-gradient(135deg,var(--accent2),#8de88f);color:white;box-shadow:0 4px 16px rgba(107,203,119,0.3);}
+.btn-sm{width:auto;padding:10px 20px;font-size:0.9rem;}
+.btn-row{display:flex;gap:10px;}
+.btn-row .btn{margin-bottom:0;}
+.btn:disabled{opacity:0.5;cursor:not-allowed;}
+
+.msg{padding:12px 16px;border-radius:var(--radius-sm);font-size:0.9rem;margin-top:12px;text-align:center;display:none;}
+.msg.show{display:block;}
+.msg-error{background:#FEE2E2;color:#B91C1C;}
+.msg-success{background:#DCFCE7;color:#166534;}
+.msg-info{background:#DBEAFE;color:#1D4ED8;}
+
+.badge{display:inline-block;padding:4px 12px;border-radius:30px;font-size:0.75rem;font-weight:700;}
+.badge-red{background:#FEE2E2;color:#EF4444;}
+.badge-blue{background:#DBEAFE;color:#3B82F6;}
+.badge-green{background:#DCFCE7;color:#16A34A;}
+.badge-yellow{background:#FEF9C3;color:#CA8A04;}
+
+.streak-banner{background:linear-gradient(135deg,#FFF3E0,#FFE0B2);border-radius:var(--radius-sm);padding:14px 18px;display:flex;align-items:center;gap:12px;margin-bottom:20px;}
+.streak-icon{font-size:1.8rem;}
+.streak-text{font-size:0.9rem;color:#E65100;font-weight:600;}
+.streak-num{font-size:1.4rem;font-weight:800;color:#E65100;}
+
+.subject-card{border-radius:var(--radius);padding:24px 20px;margin-bottom:14px;cursor:pointer;transition:var(--transition);position:relative;overflow:hidden;border:none;width:100%;text-align:left;font-family:inherit;}
+.subject-card:active{transform:scale(0.98);}
+.subject-card-ko{background:linear-gradient(135deg,#F5EDD8,#EDD8B5);border:2px solid #D4A373;}
+.subject-card-ri{background:linear-gradient(135deg,#1B2E4B,#243B5E);border:2px solid #2D4A6E;}
+.subject-card-ko .sc-label{color:#8B6914;font-size:0.8rem;font-weight:700;}
+.subject-card-ko .sc-name{color:#5C3D0A;font-size:1.2rem;font-weight:800;margin-top:4px;}
+.subject-card-ko .sc-arrow{color:#D4A373;}
+.subject-card-ri .sc-label{color:#90AFD4;font-size:0.8rem;font-weight:700;}
+.subject-card-ri .sc-name{color:white;font-size:1.2rem;font-weight:800;margin-top:4px;}
+.subject-card-ri .sc-arrow{color:#4D96FF;}
+.sc-arrow{font-size:1.4rem;position:absolute;right:20px;top:50%;transform:translateY(-50%);}
+
+.unit-group{margin-bottom:20px;}
+.unit-part{font-size:0.75rem;font-weight:700;color:var(--text3);margin-bottom:4px;}
+.unit-chapter{font-size:0.8rem;color:var(--text2);margin-bottom:8px;}
+.unit-section{font-size:0.8rem;color:var(--text2);margin-top:2px;}
+.unit-item{background:white;border:2px solid var(--border);border-radius:var(--radius-sm);padding:16px 18px;margin-bottom:8px;cursor:pointer;transition:var(--transition);display:flex;flex-direction:column;align-items:flex-start;font-family:inherit;width:100%;text-align:left;position:relative;}
+.unit-item:hover{border-color:var(--subject-color);background:#FFFBF8;}
+.unit-item:active{transform:scale(0.98);}
+.unit-name{font-size:1rem;font-weight:700;color:var(--text);}
+.unit-pages{font-size:0.8rem;color:var(--text3);margin-top:4px;}
+.unit-arrow{color:var(--text3);font-size:1.1rem;position:absolute;right:18px;top:50%;transform:translateY(-50%);}
+
+.exam-card{background:linear-gradient(135deg,#FFF8E1,#FFF3CD);border:2px solid #FCD34D;border-radius:var(--radius);padding:20px 18px;margin-bottom:8px;cursor:pointer;transition:var(--transition);position:relative;font-family:inherit;width:100%;text-align:left;}
+.exam-card:active{transform:scale(0.98);}
+.exam-card-icon{font-size:1.5rem;margin-bottom:4px;}
+.exam-card-name{font-size:1.1rem;font-weight:800;color:#92400E;}
+.exam-card-info{font-size:0.8rem;color:#B45309;margin-top:4px;}
+.exam-card-arrow{color:#D97706;font-size:1.2rem;position:absolute;right:18px;top:50%;transform:translateY(-50%);}
+
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.mode-card{background:white;border:2px solid var(--border);border-radius:var(--radius);padding:24px 16px;cursor:pointer;transition:var(--transition);text-align:center;font-family:inherit;}
+.mode-card:active{transform:scale(0.96);}
+.mode-card:hover{border-color:var(--primary);}
+.mode-icon{font-size:2.2rem;margin-bottom:10px;}
+.mode-label{font-size:0.95rem;font-weight:700;color:var(--text);}
+.mode-desc{font-size:0.75rem;color:var(--text2);margin-top:4px;}
+.mode-card-anket-done{opacity:0.5;cursor:not-allowed;}
+.anket-done-badge{display:inline-block;background:#DCFCE7;color:#166534;font-size:0.75rem;padding:3px 10px;border-radius:20px;margin-top:6px;}
+
+.quiz-mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px;}
+.quiz-mode-btn{background:white;border:2px solid var(--border);border-radius:var(--radius);padding:28px 16px;cursor:pointer;transition:var(--transition);text-align:center;font-family:inherit;}
+.quiz-mode-btn:hover{border-color:var(--primary);background:var(--primary-pale);}
+.quiz-mode-btn:active{transform:scale(0.96);}
+.quiz-mode-icon{font-size:2.5rem;margin-bottom:12px;}
+.quiz-mode-label{font-size:1rem;font-weight:800;color:var(--text);}
+.quiz-mode-desc{font-size:0.8rem;color:var(--text2);margin-top:6px;}
+
+.quiz-progress{margin-bottom:20px;}
+.progress-bar-wrap{background:#F0E8E8;border-radius:30px;height:8px;overflow:hidden;margin-bottom:6px;}
+.progress-bar{background:linear-gradient(90deg,var(--primary),var(--primary-light));height:100%;border-radius:30px;transition:width 0.4s ease;}
+.progress-text{font-size:0.8rem;color:var(--text2);text-align:right;}
+.quiz-card{background:white;border-radius:var(--radius);box-shadow:var(--shadow);padding:28px 22px;margin-bottom:20px;}
+.quiz-score-badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:700;margin-bottom:12px;}
+.quiz-score-3{background:#FEE2E2;color:#EF4444;}
+.quiz-score-2{background:#DBEAFE;color:#3B82F6;}
+.quiz-score-1{background:#DCFCE7;color:#166534;}
+.quiz-question{font-size:1rem;font-weight:600;color:var(--text);line-height:1.7;}
+.quiz-blank{color:var(--primary);font-weight:800;}
+
+.desc-input-wrap{margin-top:20px;}
+.desc-input{width:100%;padding:16px;border:2px solid var(--border);border-radius:var(--radius-sm);font-size:1.1rem;font-family:inherit;text-align:center;transition:var(--transition);}
+.desc-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(255,107,107,0.12);}
+
+.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px;}
+.choice-btn{background:white;border:2px solid var(--border);border-radius:var(--radius-sm);padding:16px 12px;font-size:0.95rem;font-weight:600;font-family:inherit;cursor:pointer;transition:var(--transition);text-align:center;color:var(--text);}
+.choice-btn:hover{border-color:var(--primary);background:var(--primary-pale);}
+.choice-btn:active{transform:scale(0.96);}
+.choice-btn.correct{background:#DCFCE7;border-color:#16A34A;color:#166534;}
+.choice-btn.wrong{background:#FEE2E2;border-color:#EF4444;color:#B91C1C;}
+.choice-btn.show-correct{background:#DCFCE7;border-color:#16A34A;color:#166534;}
+.choice-btn:disabled{cursor:not-allowed;}
+
+.feedback{border-radius:var(--radius-sm);padding:16px 18px;margin-top:16px;display:none;}
+.feedback.show{display:block;}
+.feedback-correct{background:#DCFCE7;border-left:4px solid #16A34A;}
+.feedback-wrong{background:#FEE2E2;border-left:4px solid #EF4444;}
+.feedback-partial{background:#FEF9C3;border-left:4px solid #CA8A04;}
+.feedback-title{font-weight:800;font-size:1rem;margin-bottom:6px;}
+.feedback-answer{font-size:0.9rem;color:var(--text);}
+.feedback-furigana{font-size:0.8rem;color:var(--text2);margin-top:2px;}
+
+.result-circle{width:120px;height:120px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-light));display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 24px;box-shadow:0 8px 24px rgba(255,107,107,0.35);}
+.result-num{font-size:2rem;font-weight:800;color:white;}
+.result-denom{font-size:0.9rem;color:rgba(255,255,255,0.8);}
+.ranking-card{background:linear-gradient(135deg,#FFF8E1,#FFF3CD);border-radius:var(--radius-sm);padding:16px 18px;text-align:center;margin-bottom:16px;}
+.ranking-title{font-size:0.8rem;color:#92400E;font-weight:700;margin-bottom:4px;}
+.ranking-val{font-size:1.4rem;font-weight:800;color:#92400E;}
+
+.result-streak{background:linear-gradient(135deg,#FFF3E0,#FFE0B2);border-radius:var(--radius-sm);padding:14px 18px;text-align:center;margin-bottom:16px;}
+.result-streak-icon{font-size:2rem;}
+.result-streak-text{font-size:1.2rem;font-weight:800;color:#E65100;}
+.result-comparison{background:white;border-radius:var(--radius-sm);padding:16px 18px;text-align:center;margin-bottom:16px;box-shadow:var(--shadow2);}
+.result-comparison-title{font-size:0.8rem;color:var(--text3);margin-bottom:4px;}
+.result-comparison-row{font-size:1rem;font-weight:600;}
+.result-comparison-diff{font-size:1.4rem;font-weight:800;}
+.result-incorrect-item{padding:8px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.result-incorrect-user{color:#EF4444;font-weight:600;}
+.result-incorrect-arrow{color:var(--text3);}
+.result-incorrect-correct{color:#16A34A;font-weight:600;}
+
+.anket-section{margin-bottom:24px;}
+.anket-q-label{font-size:0.85rem;font-weight:700;color:var(--text2);margin-bottom:4px;}
+.anket-q-title{font-size:1rem;font-weight:700;color:var(--text);margin-bottom:12px;}
+.anket-note{font-size:0.78rem;color:var(--text3);margin-top:4px;}
+
+.rating-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+.rating-btn{background:white;border:2px solid var(--border);border-radius:var(--radius-sm);padding:10px 4px;cursor:pointer;transition:var(--transition);text-align:center;font-family:inherit;}
+.rating-btn:active{transform:scale(0.95);}
+.rating-num{font-size:1.2rem;font-weight:800;color:var(--text);}
+.rating-desc{font-size:0.62rem;color:var(--text2);margin-top:3px;line-height:1.3;}
+.rating-btn.selected{background:var(--primary);border-color:var(--primary);}
+.rating-btn.selected .rating-num,.rating-btn.selected .rating-desc{color:white;}
+
+.dual-wrap{border:2px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;}
+.dual-header-row{display:grid;grid-template-columns:1fr 1fr;}
+.dual-col-header{font-size:0.78rem;font-weight:700;padding:8px 10px;text-align:center;}
+.dual-col-satisfied{background:#DCFCE7;color:#166534;}
+.dual-col-unsatisfied{background:#FEE2E2;color:#B91C1C;}
+.dual-data-row{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--border);}
+.dual-cell{padding:8px 10px;font-size:0.85rem;cursor:pointer;transition:var(--transition);display:flex;align-items:center;gap:6px;}
+.dual-cell input[type=checkbox]{width:16px;height:16px;accent-color:var(--primary);flex-shrink:0;}
+.dual-cell-l{background:#F9FFF9;border-right:1px solid var(--border);}
+.dual-cell-r{background:#FFF9F9;}
+.dual-cell-l:hover{background:#DCFCE7;}
+.dual-cell-r:hover{background:#FEE2E2;}
+
+.agree-wrap{background:#F8F9FA;border-radius:var(--radius-sm);padding:16px;display:flex;gap:12px;align-items:flex-start;}
+.agree-wrap input{width:20px;height:20px;flex-shrink:0;margin-top:2px;accent-color:var(--primary);}
+.agree-text{font-size:0.82rem;color:var(--text2);line-height:1.5;}
+
+.stats-unit-card{background:white;border-radius:var(--radius);box-shadow:var(--shadow2);padding:20px 18px;margin-bottom:14px;}
+.stats-unit-name{font-size:1rem;font-weight:800;color:var(--text);margin-bottom:12px;}
+.stats-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);}
+.stats-row:last-child{border-bottom:none;}
+.stats-key{font-size:0.85rem;color:var(--text2);}
+.stats-val{font-size:0.95rem;font-weight:700;color:var(--text);}
+.stats-rank{background:linear-gradient(135deg,#FFF8E1,#FFF3CD);border-radius:var(--radius-sm);padding:14px 16px;text-align:center;margin-top:12px;}
+.stats-rank-label{font-size:0.78rem;color:#92400E;font-weight:700;}
+.stats-rank-val{font-size:1.3rem;font-weight:800;color:#92400E;}
+.no-stats{text-align:center;padding:40px 20px;color:var(--text3);}
+.no-stats-icon{font-size:3rem;margin-bottom:12px;}
+
+.error-503-panel{background:#1B1B2F;border-radius:var(--radius);padding:24px;color:#CDCDDE;}
+.error-title{font-size:1.4rem;font-weight:800;color:#FF6B6B;margin-bottom:12px;}
+.error-console{background:#0D0D1A;border-radius:8px;padding:12px;margin:16px 0;max-height:200px;overflow-y:auto;font-family:monospace;font-size:0.75rem;}
+.console-line{color:#4ADE80;padding:2px 0;}
+.console-line .blinking{display:inline-block;width:8px;height:14px;background:#4ADE80;animation:blink 1s step-end infinite;}
+@keyframes blink{50%{opacity:0;}}
+.btn-503-disabled{width:100%;padding:14px;background:#2D2D44;color:#666;border:1px solid #444;border-radius:20px;text-align:center;margin-top:16px;}
+
+.simple-login-wrap{background:#F0FDF4;border:2px solid #BBF7D0;border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:16px;transition:var(--transition);}
+.simple-login-wrap.active-save{background:#FFF8E1;border-color:#FCD34D;}
+.simple-login-label{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:0.95rem;font-weight:700;color:#166534;}
+.simple-login-label input[type="checkbox"]{width:20px;height:20px;accent-color:#16A34A;flex-shrink:0;}
+.simple-login-icon{font-size:1.2rem;}
+.simple-login-text{display:flex;align-items:center;gap:6px;}
+.simple-login-notice{font-size:0.72rem;color:#166534;margin-top:8px;padding-left:30px;line-height:1.5;opacity:0.8;}
+.simple-login-saved-name{font-size:0.85rem;font-weight:700;color:#92400E;margin-top:6px;padding-left:30px;}
+.simple-login-delete{font-size:0.72rem;color:#EF4444;margin-top:6px;padding-left:30px;cursor:pointer;text-decoration:underline;display:inline-block;}
+.simple-login-delete:hover{color:#DC2626;}
+
+.rating-grid-7{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.rating-grid-7 .rating-btn{padding:8px 4px;}
+.rating-grid-7 .rating-num{font-size:1.1rem;}
+.rating-grid-7 .rating-desc{display:none;}
+.bar-wrap{background:#F0E8E8;border-radius:4px;height:12px;width:100%;margin:4px 0;}
+.bar-fill{height:100%;border-radius:4px;transition:width 0.4s ease;}
+.bar-label{display:flex;justify-content:space-between;font-size:0.8rem;margin-top:2px;}
+.bar-type{display:flex;justify-content:space-between;margin-bottom:4px;}
+.sticky-bottom{position:sticky;bottom:20px;margin-top:20px;z-index:10;}
+
+.loading-dots{display:inline-flex;gap:4px;align-items:center;justify-content:center;padding:8px;}
+.loading-dots span{width:8px;height:8px;background:var(--primary);border-radius:50%;animation:dotPulse 1.4s ease-in-out infinite;}
+.loading-dots span:nth-child(1){animation-delay:0s;}
+.loading-dots span:nth-child(2){animation-delay:0.2s;}
+.loading-dots span:nth-child(3){animation-delay:0.4s;}
+@keyframes dotPulse{0%,80%,100%{transform:scale(0.6);opacity:0.4;}40%{transform:scale(1);opacity:1;}}
+
+.loading-subject{text-align:center;padding:40px 20px;color:var(--text3);}
+.loading-subject-icon{font-size:3rem;margin-bottom:12px;animation:bounce 1.5s ease-in-out infinite;}
+@keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <div class="app-header" id="appHeader">
+    <div class="app-logo">前向き<span>授業</span></div>
+    <div class="header-user hidden" id="headerUser"></div>
+  </div>
+
+  <div class="panel hidden" id="panelAuth">
+    <div class="card">
+      <div id="authLoginView">
+        <p class="page-title">🔑 ログイン</p>
+        <p class="page-subtitle">登録済みのユーザー名とパスワードでログイン</p>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">学年</label><select class="form-input" id="loginGrade"><option value="">選択</option><option value="1">1年</option><option value="2">2年</option><option value="3">3年</option></select></div>
+          <div class="form-group"><label class="form-label">クラス</label><select class="form-input" id="loginClass"><option value="">選択</option><option value="1">1組</option><option value="2">2組</option><option value="3">3組</option></select></div>
+        </div>
+        <div class="form-group"><label class="form-label">出席番号</label><input class="form-input" type="text" id="loginNumber" placeholder="例: 15" inputmode="numeric" maxlength="2" autocomplete="off"></div>
+        <div class="form-group"><label class="form-label">パスワード</label><input class="form-input" type="password" id="loginPassword" placeholder="••••••••"></div>
+        <div class="simple-login-wrap" id="simpleLoginWrap">
+          <label class="simple-login-label"><input type="checkbox" id="simpleLoginCheck"><span class="simple-login-text"><span class="simple-login-icon">🔓</span>かんたんログインを使う</span></label>
+          <div class="simple-login-notice">⚠️ チェックを入れると、この端末にログイン情報が保存され、<br>次回から自動で入力されます。共用端末ではチェックしないでください。</div>
+          <div class="simple-login-saved-name hidden" id="savedLoginName"></div>
+          <span class="simple-login-delete hidden" id="deleteSavedLogin">保存を解除する</span>
+        </div>
+        <button class="btn btn-primary" id="loginBtn">ログイン</button>
+        <div class="divider">または</div>
+        <button class="btn btn-secondary" id="toRegBtn">新規登録はこちら</button>
+        <div class="msg" id="loginMsg"></div>
+      </div>
+      <div id="authRegisterView" class="hidden">
+        <p class="page-title">📝 アカウント登録</p>
+        <p class="page-subtitle">以下の項目をすべて入力してください</p>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">学年</label><select class="form-input" id="regGrade"><option value="">選択</option><option value="1">1年</option><option value="2">2年</option><option value="3">3年</option></select></div>
+          <div class="form-group"><label class="form-label">クラス</label><select class="form-input" id="regClass"><option value="">選択</option><option value="1">1組</option><option value="2">2組</option><option value="3">3組</option></select></div>
+        </div>
+        <div class="form-group"><label class="form-label">出席番号</label><input class="form-input" type="text" id="regNumber" placeholder="例: 15" inputmode="numeric" maxlength="2" autocomplete="off"><div class="form-hint">半角数字 1〜35</div></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">名字</label><input class="form-input" type="text" id="regLastName" placeholder="例: 山田"></div>
+          <div class="form-group"><label class="form-label">名前</label><input class="form-input" type="text" id="regFirstName" placeholder="例: 花子"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">名字フリガナ</label><input class="form-input" type="text" id="regLastKana" placeholder="例: ヤマダ"><div class="form-hint">全角カタカナ</div></div>
+          <div class="form-group"><label class="form-label">名前フリガナ</label><input class="form-input" type="text" id="regFirstKana" placeholder="例: ハナコ"><div class="form-hint">全角カタカナ</div></div>
+        </div>
+        <div class="form-group"><label class="form-label">パスワード</label><input class="form-input" type="password" id="regPassword" placeholder="••••••••"><div class="form-hint">半角英数字4文字以上</div></div>
+        <button class="btn btn-primary" id="regBtn">登録する</button>
+        <div class="divider">または</div>
+        <button class="btn btn-secondary" id="backToLoginFromReg">ログイン画面に戻る</button>
+        <div class="msg" id="regMsg"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel hidden" id="panel503">
+    <div class="error-503-panel">
+      <p class="error-title">⚠️ 503 Service Unavailable</p>
+      <p style="color:#CDCDDE;margin-bottom:20px;">サーバーが現在リクエストを処理できません。<br>しばらく待ってから再試行してください。</p>
+      <div style="background:#2D2D44;border-radius:16px;padding:16px;">
+        <p style="font-family:monospace;color:#aaa;font-size:0.85rem;">HTTP/1.1 503 Service Unavailable</p>
+        <p style="font-family:monospace;font-size:0.8rem;color:#777;margin-top:4px;">Retry-After: --</p>
+        <p style="font-family:monospace;font-size:0.8rem;color:#777;margin-top:2px;">X-Error: ERR_DB_CLUSTER_UNREACHABLE</p>
+      </div>
+      <div class="error-console" id="fakeConsole"><div class="console-line">[  0.001] kernel: Initializing subsystems...</div><div class="console-line">[  0.043] db-pool: Connecting to cluster (db-cluster-03)...</div></div>
+      <button class="btn-503-disabled" onclick="return false;" disabled>再読み込み（無効）</button>
+    </div>
+  </div>
+
+  <div class="panel hidden" id="panelSubject">
+    <div class="streak-banner hidden" id="streakBanner"><div class="streak-icon">🔥</div><div><div class="streak-text">現在 <span class="streak-num" id="streakNum">0</span> 日間連続で取り組んでいます！</div></div></div>
+    <div class="loading-subject hidden" id="loadingSubject"><div class="loading-subject-icon">📚</div><p style="font-size:0.9rem;margin-bottom:12px;">科目を読み込み中...</p><div class="loading-dots"><span></span><span></span><span></span></div></div>
+    <div id="subjectMainContent">
+      <p class="page-title">科目を選んでください</p>
+      <p class="page-subtitle">取り組む科目を選択してください</p>
+      <button class="subject-card subject-card-ko" id="subjectKo"><div class="sc-label">高校2年生</div><div class="sc-name">公共</div><div class="sc-arrow">→</div></button>
+      <button class="subject-card subject-card-ri" id="subjectRi"><div class="sc-label">高校3年生</div><div class="sc-name">倫理</div><div class="sc-arrow">→</div></button>
+      <div class="divider">─────</div>
+      <button class="btn btn-accent" id="bigFiveBtn">🔍 自分の勉強タイプを診断（1分）</button>
+      <button class="btn btn-secondary" id="statsFromSubjectBtn">📊 成績を見る</button>
+      <button class="btn btn-secondary" id="logoutBtn">ログアウト</button>
+    </div>
+  </div>
+
+  <div class="panel hidden" id="panelUnit">
+    <button class="back-btn" id="backToSubject"><span class="back-arrow">←</span> 科目選択へ戻る</button>
+    <p class="page-title" id="unitPageTitle">単元を選んでください</p>
+    <p class="page-subtitle" id="unitPageSubtitle"></p>
+    <div id="unitList"></div>
+  </div>
+
+  <div class="panel hidden" id="panelMode">
+    <button class="back-btn" id="backToUnit"><span class="back-arrow">←</span> 単元選択へ戻る</button>
+    <p class="page-title" id="modePageTitle">何をしますか？</p>
+    <p class="page-subtitle" id="modePageSubtitle"></p>
+    <div class="mode-grid">
+      <button class="mode-card" id="modeQuiz"><div class="mode-icon">✏️</div><div class="mode-label">一問一答</div><div class="mode-desc">用語を練習しよう</div></button>
+      <button class="mode-card" id="modeAnket"><div class="mode-icon">📋</div><div class="mode-label">授業アンケート</div><div class="mode-desc">授業の感想を送る</div><div class="anket-done-badge hidden" id="anketDoneBadge">✅ 提出済み</div></button>
+      <button class="mode-card hidden" id="modeExamAnket"><div class="mode-icon">📝</div><div class="mode-label">試験の感想を送る</div><div class="mode-desc">試験の振り返り</div><div class="anket-done-badge hidden" id="examAnketDoneBadge">✅ 提出済み</div></button>
+    </div>
+  </div>
+
+  <div class="panel hidden" id="panelQuizMode">
+    <button class="back-btn" id="backToMode1"><span class="back-arrow">←</span> 戻る</button>
+    <p class="page-title">出題形式を選んでください</p>
+    <p class="page-subtitle">苦手な方法で練習するのがおすすめ！</p>
+    <div class="quiz-mode-grid">
+      <button class="quiz-mode-btn" id="quizModeDesc"><div class="quiz-mode-icon">✍️</div><div class="quiz-mode-label">記述モード</div><div class="quiz-mode-desc">答えを自分で入力する</div></button>
+      <button class="quiz-mode-btn" id="quizModeSelect"><div class="quiz-mode-icon">☑️</div><div class="quiz-mode-label">選択モード</div><div class="quiz-mode-desc">4択から選ぶ</div></button>
+    </div>
+  </div>
+
+  <div class="panel hidden" id="panelQuiz">
+    <button class="back-btn" id="backToQuizMode"><span class="back-arrow">←</span> 出題形式選択へ戻る</button>
+    <div class="quiz-progress"><div class="progress-bar-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div><div class="progress-text" id="progressText">0 / 0</div></div>
+    <div class="quiz-card">
+      <span class="quiz-score-badge" id="quizScoreBadge"></span>
+      <p class="quiz-question" id="quizQuestion"></p>
+      <div class="desc-input-wrap" id="descInputWrap"><input class="desc-input form-input" type="text" id="descInput" placeholder="答えを入力..."><button class="btn btn-primary" id="descSubmitBtn" style="margin-top:12px;">回答する</button></div>
+      <div class="choice-grid hidden" id="choiceGrid"></div>
+      <div class="feedback" id="feedbackArea"><div class="feedback-title" id="feedbackTitle"></div><div class="feedback-answer" id="feedbackAnswer"></div><div class="feedback-furigana" id="feedbackFurigana"></div></div>
+    </div>
+    <button class="btn btn-accent hidden" id="nextBtn">次の問題へ →</button>
+  </div>
+
+  <div class="panel hidden" id="panelResult">
+    <p class="page-title" style="text-align:center;margin-bottom:20px;">結果発表 🎉</p>
+    <div class="result-circle"><div class="result-num" id="resultCorrect">0</div><div class="result-denom" id="resultTotal">/ 0問正解</div></div>
+    <div id="resultStreakArea"></div>
+    <div id="resultComparisonArea"></div>
+    <div class="ranking-card" id="resultRankCard"><div class="ranking-title">この単元の取り組み回数ランキング</div><div class="ranking-val" id="resultRankVal">─</div></div>
+    <div id="resultIncorrectArea"></div>
+    <div class="btn-row"><button class="btn btn-primary" id="retryBtn">もう一度</button><button class="btn btn-secondary" id="backToModeFromResult">戻る</button></div>
+  </div>
+
+  <div class="panel hidden" id="panelAnket">
+    <button class="back-btn" id="backToMode2"><span class="back-arrow">←</span> 戻る</button>
+    <p class="page-title">授業アンケート 📋</p>
+    <p class="page-subtitle" id="anketSubtitle"></p>
+    <div class="anket-section card-sm"><div class="anket-q-label">Q1 必須</div><div class="anket-q-title">授業の満足度</div><div class="rating-grid" id="q1Grid"><button class="rating-btn" data-val="1"><div class="rating-num">1</div><div class="rating-desc">不満<br>ほとんど理解できず</div></button><button class="rating-btn" data-val="2"><div class="rating-num">2</div><div class="rating-desc">やや不満<br>難しく満足できず</div></button><button class="rating-btn" data-val="3"><div class="rating-num">3</div><div class="rating-desc">どちらとも<br>半分程度</div></button><button class="rating-btn" data-val="4"><div class="rating-num">4</div><div class="rating-desc">満足<br>おおむね理解</div></button><button class="rating-btn" data-val="5"><div class="rating-num">5</div><div class="rating-desc">とても満足<br>充実していた</div></button></div></div>
+    <div class="anket-section card-sm"><div class="anket-q-label">Q2 必須</div><div class="anket-q-title">今日の私の目標達成度</div><div class="rating-grid" id="q2Grid"><button class="rating-btn" data-val="1"><div class="rating-num">1</div><div class="rating-desc">未達成</div></button><button class="rating-btn" data-val="2"><div class="rating-num">2</div><div class="rating-desc">あまり達成できず</div></button><button class="rating-btn" data-val="3"><div class="rating-num">3</div><div class="rating-desc">半分達成</div></button><button class="rating-btn" data-val="4"><div class="rating-num">4</div><div class="rating-desc">ほぼ達成</div></button><button class="rating-btn" data-val="5"><div class="rating-num">5</div><div class="rating-desc">十分達成</div></button></div></div>
+    <div class="anket-section card-sm"><div class="anket-q-label">Q3 必須・複数回答可</div><div class="anket-q-title">満足・不満足だったこと</div><div class="dual-wrap"><div class="dual-header-row"><div class="dual-col-header dual-col-satisfied">😊 満足したこと</div><div class="dual-col-header dual-col-unsatisfied">😔 不満足だったこと</div></div><div id="q3Rows"></div></div></div>
+    <div class="anket-section card-sm"><div class="anket-q-label">Q4 任意</div><div class="anket-q-title">Q3の詳細・その他</div><textarea class="form-input" id="q4Input" rows="3" placeholder="自由に書いてください"></textarea></div>
+    <div class="anket-section card-sm"><div class="anket-q-label">Q5 必須</div><div class="anket-q-title">今日の一文は？</div><textarea class="form-input" id="q5Input" rows="2" placeholder="授業を一言で表すと？"></textarea></div>
+    <div class="anket-section card-sm"><div class="anket-q-label">Q6 任意</div><div class="anket-q-title">分からなかったこと</div><textarea class="form-input" id="q6Input" rows="3" placeholder="分からなかった内容"></textarea></div>
+    <div class="card-sm"><div class="section-label">先生へのメッセージ</div>
+      <div class="anket-section"><div class="anket-q-label">Q7 任意</div><div class="anket-q-title">楽しいこと</div><textarea class="form-input" id="q7Input" rows="2"></textarea></div>
+      <div class="anket-section"><div class="anket-q-label">Q8 任意</div><div class="anket-q-title">悲しいこと</div><textarea class="form-input" id="q8Input" rows="2"></textarea></div>
+      <div class="anket-section"><div class="anket-q-label">Q9 任意</div><div class="anket-q-title">教員に言いたいこと</div><textarea class="form-input" id="q9Input" rows="2"></textarea></div>
+      <div class="anket-section" style="margin-bottom:0;"><div class="anket-q-label">Q10 任意</div><div class="anket-q-title">秘密</div><textarea class="form-input" id="q10Input" rows="2"></textarea></div>
+    </div>
+    <div class="card-sm"><div class="agree-wrap"><input type="checkbox" id="agreeCheck"><div class="agree-text">教員がアンケートの内容を、授業やテストの作成・改善などの学内活動に利用することに同意します。</div></div></div>
+    <div class="msg" id="anketMsg"></div>
+    <button class="btn btn-primary" id="anketSubmitBtn">アンケートを提出する</button>
+  </div>
+
+  <div class="panel hidden" id="panelExamAnket">
+    <button class="back-btn" id="backToModeFromExamAnket"><span class="back-arrow">←</span> 戻る</button>
+    <p class="page-title">試験アンケート 📝</p>
+    <p class="page-subtitle" id="examAnketSubtitle"></p>
+    <div class="anket-section card-sm"><div class="anket-q-label">Q1 必須</div><div class="anket-q-title">試験の満足度</div><div class="rating-grid" id="examQ1Grid"><button class="rating-btn" data-val="1"><div class="rating-num">1</div><div class="rating-desc">不満</div></button><button class="rating-btn" data-val="2"><div class="rating-num">2</div><div class="rating-desc">やや不満</div></button><button class="rating-btn" data-val="3"><div class="rating-num">3</div><div class="rating-desc">どちらとも</div></button><button class="rating-btn" data-val="4"><div class="rating-num">4</div><div class="rating-desc">満足</div></button><button class="rating-btn" data-val="5"><div class="rating-num">5</div><div class="rating-desc">とても満足</div></button></div></div>
+    <div class="anket-section card-sm"><div class="anket-q-label">Q2 必須</div><div class="anket-q-title">試験における私の目標達成度</div><div class="rating-grid" id="examQ2Grid"><button class="rating-btn" data-val="1"><div class="rating-num">1</div><div class="rating-desc">未達成</div></button><button class="rating-btn" data-val="2"><div class="rating-num">2</div><div class="rating-desc">あまり達成できず</div></button><button class="rating-btn" data-val="3"><div class="rating-num">3</div><div class="rating-desc">半分達成</div></button><button class="rating-btn" data-val="4"><div class="rating-num">4</div><div class="rating-desc">ほぼ達成</div></button><button class="rating-btn" data-val="5"><div class="rating-num">5</div><div class="rating-desc">十分達成</div></button></div></div>
+    <div class="anket-section card-sm"><div class="anket-q-label">Q3 必須・複数回答可</div><div class="anket-q-title">試験の点数アップに役立ったことと試験に出てきたストーリーの評価</div><div class="dual-wrap"><div class="dual-header-row"><div class="dual-col-header dual-col-satisfied">😊 役立ったこと</div><div class="dual-col-header dual-col-unsatisfied">😔 役に立たなかったこと</div></div><div id="examQ3Rows"></div></div></div>
+    <div class="anket-section card-sm"><div class="anket-q-label">Q4 任意</div><div class="anket-q-title">Q3の詳細・その他</div><textarea class="form-input" id="examQ4Input" rows="3" placeholder="自由に書いてください"></textarea></div>
+    <div class="anket-section card-sm"><div class="anket-q-label">Q5 必須</div><div class="anket-q-title">試験の感想は？（一言で）</div><textarea class="form-input" id="examQ5Input" rows="2" placeholder="試験を一言で表すと？"></textarea></div>
+    <div class="anket-section card-sm"><div class="anket-q-label">Q6 任意</div><div class="anket-q-title">試験について分からなかったこと</div><textarea class="form-input" id="examQ6Input" rows="3" placeholder="分からなかった内容"></textarea></div>
+    <div class="card-sm"><div class="section-label">試験についてのメッセージ</div>
+      <div class="anket-section"><div class="anket-q-label">Q7 任意</div><div class="anket-q-title">試験について楽しかったこと</div><textarea class="form-input" id="examQ7Input" rows="2"></textarea></div>
+      <div class="anket-section"><div class="anket-q-label">Q8 任意</div><div class="anket-q-title">試験について悲しかったこと</div><textarea class="form-input" id="examQ8Input" rows="2"></textarea></div>
+      <div class="anket-section"><div class="anket-q-label">Q9 任意</div><div class="anket-q-title">試験について教員に言いたいこと</div><textarea class="form-input" id="examQ9Input" rows="2"></textarea></div>
+      <div class="anket-section" style="margin-bottom:0;"><div class="anket-q-label">Q10 任意</div><div class="anket-q-title">試験について秘密にしてほしいこと</div><textarea class="form-input" id="examQ10Input" rows="2"></textarea></div>
+    </div>
+    <div class="card-sm"><div class="agree-wrap"><input type="checkbox" id="examAgreeCheck"><div class="agree-text">教員がアンケートの内容を、授業やテストの作成・改善などの学内活動に利用することに同意します。</div></div></div>
+    <div class="msg" id="examAnketMsg"></div>
+    <button class="btn btn-primary" id="examAnketSubmitBtn">アンケートを提出する</button>
+  </div>
+
+  <div class="panel hidden" id="panelStats">
+    <button class="back-btn" id="backToSubjectFromStats"><span class="back-arrow">←</span> 科目選択へ戻る</button>
+    <p class="page-title">📊 あなたの成績</p>
+    <p class="page-subtitle">単元別の取り組み状況です</p>
+    <div id="statsContent"><div class="no-stats"><div class="no-stats-icon">⏳</div><p>読み込み中...</p></div></div>
+  </div>
+
+  <div class="panel hidden" id="panelBigFiveIntro">
+    <button class="back-btn" id="backFromBigFiveIntro"><span class="back-arrow">←</span> 科目選択へ戻る</button>
+    <div class="card"><p class="page-title">🐣 勉強タイプ診断</p><p class="page-subtitle">10の質問に答えると、あなたに合った勉強法がわかります。</p>
+    <div style="background:#FFF9F5;border-radius:12px;padding:16px;margin-bottom:16px;"><p style="font-size:0.9rem;font-weight:700;margin-bottom:8px;">📋 注意事項</p><ol style="font-size:0.85rem;line-height:1.8;padding-left:1.2em;"><li>この診断は学術的な性格検査ではなく、<strong>自分に合った勉強のヒント</strong>を得るためのものです。</li><li>性格傾向は固定的ではありません。結果は「今の時点でのひとつの目安」です。</li><li>どのタイプにも <strong>得意なこと・合った学び方</strong> があります。優劣をつけるものではありません。</li><li>クラス全体の傾向は匿名で表示され、<strong>あなたの回答が誰のものかわかる形で公開されることはありません。</strong></li><li>診断結果は授業改善や学習アドバイスに役立てられ、成績評価には直接関係しません。</li></ol></div>
+    <div class="agree-wrap"><input type="checkbox" id="bigFiveAgreeCheck"><div class="agree-text">上記すべてに同意し、診断を始めます。</div></div>
+    <button class="btn btn-primary" id="startBigFiveBtn" disabled>診断を始める</button><div class="msg" id="bigFiveIntroMsg"></div></div>
+  </div>
+  <div class="panel hidden" id="panelBigFiveQuiz"><p class="page-title">🔍 質問に答えてください</p><p class="page-subtitle">あてはまる数字を選んでね（1：まったく違う 〜 7：とてもそう）</p><div id="bigFiveQuestionsContainer"></div><button class="btn btn-primary sticky-bottom" id="submitBigFiveBtn" disabled>診断する</button></div>
+  <div class="panel hidden" id="panelBigFiveResult"><button class="back-btn" id="backFromBigFiveResult"><span class="back-arrow">←</span> 科目選択へ戻る</button><p class="page-title">🎯 あなたの勉強タイプ</p><div id="bigFiveResultContent"></div></div>
+</div>
+
+<script>
+var LS_KEY = '__sys_tk';
+var SAVED_LOGIN_KEY = '__saved_login';
+
+var STATE = {
+  user: null,
+  subject: null,
+  subjectLabel: null,
+  unit: null,
+  isExam: false,
+  questions: [],
+  quizMode: null,
+  currentQ: 0,
+  correct: 0,
+  answered: false,
+  stats: null,
+  streak: 0,
+  rankings: {},
+  anketSubmitted: false,
+  subjectStructure: null,
+  q1Val: null,
+  q2Val: null,
+  examQ1Val: null,
+  examQ2Val: null
+};
+
+var Q3_PAIRS = [
+  { s: 'パワーポイントの内容がよく理解できた', u: 'パワーポイントの内容が難しすぎた' },
+  { s: '用語の説明文が分かりやすかった', u: '用語の説明が分かりにくかった' },
+  { s: '先生の説明が分かりやすかった', u: '先生の説明が分かりにくかった' },
+  { s: '授業のペースがちょうどよかった', u: '授業のペースが速すぎた・遅すぎた' },
+  { s: 'グループ・発言活動が充実していた', u: 'グループ・発言活動の時間が足りなかった' },
+  { s: '新しい発見・気づきがあった', u: '集中して取り組めなかった' }
+];
+var Q3_SUBJECT_PAIRS = {
+  '公共': { s: '『生きるとはすなわち』の発問が面白かった', u: '『生きるとはすなわち』の発問が難しすぎた' },
+  '倫理': { s: '『私は誰か』の発問が面白かった', u: '『私は誰か』の発問が難しすぎた' }
+};
+
+var EXAM_Q3_PAIRS = [
+  { s: 'パワーポイントの内容', u: 'パワーポイントの内容' },
+  { s: '用語の説明文', u: '用語の説明文' },
+  { s: '先生の説明', u: '先生の説明' },
+  { s: '授業のペース', u: '授業のペース' },
+  { s: '前向き授業の一問一答', u: '前向き授業の一問一答' }
+];
+
+function $(id) { return document.getElementById(id); }
+function showPanel(id) { document.querySelectorAll('.panel').forEach(function(p) { p.classList.add('hidden'); }); $(id).classList.remove('hidden'); window.scrollTo(0,0); }
+function showMsg(id, text, type) { var el = $(id); el.textContent = text; el.className = 'msg show msg-' + type; }
+function hideMsg(id) { var el = $(id); if(el) el.className = 'msg'; }
+function judgeAnswer(input, correct) { var a = input.trim(), c = correct.trim(); if (a === c) return 'correct'; if (c.includes(a) || a.includes(c)) return 'partial'; var norm = function(s) { return s.replace(/[\u30a1-\u30f6]/g, function(ch) { return String.fromCharCode(ch.charCodeAt(0) - 0x60); }); }; if (norm(a) === norm(c)) return 'correct'; return 'wrong'; }
+
+function saveLoginInfo(grade, cls, num, password, displayName) { localStorage.setItem(SAVED_LOGIN_KEY, JSON.stringify({ grade: grade, classNum: cls, number: num, password: password, displayName: displayName, savedAt: new Date().toISOString() })); }
+function loadSavedLogin() { try { var raw = localStorage.getItem(SAVED_LOGIN_KEY); return raw ? JSON.parse(raw) : null; } catch(e) { return null; } }
+function clearSavedLogin() { localStorage.removeItem(SAVED_LOGIN_KEY); }
+function restoreSimpleLoginState() { var saved = loadSavedLogin(); var checkEl = $('simpleLoginCheck'), wrapEl = $('simpleLoginWrap'), nameEl = $('savedLoginName'), delEl = $('deleteSavedLogin'); if (saved) { wrapEl.classList.add('active-save'); nameEl.textContent = '💾 保存されたアカウント: ' + saved.displayName + '（' + saved.grade + '-' + saved.classNum + '-' + saved.number + '）'; nameEl.classList.remove('hidden'); delEl.classList.remove('hidden'); checkEl.checked = true; autoFillLogin(saved); } else { wrapEl.classList.remove('active-save'); nameEl.classList.add('hidden'); delEl.classList.add('hidden'); checkEl.checked = false; clearLoginForm(); } }
+function autoFillLogin(data) { $('loginGrade').value = data.grade; $('loginClass').value = data.classNum; $('loginNumber').value = data.number; $('loginPassword').value = data.password; }
+function clearLoginForm() { $('loginGrade').value = ''; $('loginClass').value = ''; $('loginNumber').value = ''; $('loginPassword').value = ''; }
+
+function validateRegistration() { var grade = $('regGrade').value, cls = $('regClass').value, numStr = $('regNumber').value.trim(); var lastName = $('regLastName').value.trim(), firstName = $('regFirstName').value.trim(); var lastKana = $('regLastKana').value.trim(), firstKana = $('regFirstKana').value.trim(); var pass = $('regPassword').value; if (!grade) { showMsg('regMsg', '学年を選択してください', 'error'); return null; } if (!cls) { showMsg('regMsg', 'クラスを選択してください', 'error'); return null; } var num = parseInt(numStr, 10); if (isNaN(num) || num < 1 || num > 35 || !/^\d{1,2}$/.test(numStr)) { showMsg('regMsg', '出席番号は1〜35の半角数字で入力してください', 'error'); return null; } if (!lastName || !firstName) { showMsg('regMsg', '名字と名前を入力してください', 'error'); return null; } var kana = /^[ァ-ヶーヴ]+$/; if (!kana.test(lastKana)) { showMsg('regMsg', '名字フリガナは全角カタカナで入力してください', 'error'); return null; } if (!kana.test(firstKana)) { showMsg('regMsg', '名前フリガナは全角カタカナで入力してください', 'error'); return null; } if (!pass) { showMsg('regMsg', 'パスワードを入力してください', 'error'); return null; } if (!/^[a-zA-Z0-9]{4,}$/.test(pass)) { showMsg('regMsg', 'パスワードは半角英数字4文字以上で入力してください', 'error'); return null; } var uname = String(grade) + '-' + String(cls) + '-' + String(num); return { grade: Number(grade), cls: Number(cls), num: num, lastName: lastName, firstName: firstName, lastKana: lastKana, firstKana: firstKana, uname: uname, pass: pass }; }
+function askSaveLoginThenProceed(grade, cls, num, password, displayName) { var saved = loadSavedLogin(); if (saved && saved.grade === grade && saved.classNum === cls && saved.number === num) { loadSubjectStructure(); return; } if (confirm('この端末にログイン情報を保存しますか？\n\n次回から「かんたんログイン」で自動入力されます。\n\n⚠️ 共用端末では保存しないでください。')) { saveLoginInfo(grade, cls, num, password, displayName); } loadSubjectStructure(); }
+
+function loadSubjectStructure() {
+  console.log('loadSubjectStructure: 開始');
+  showSubjectPanel();
+  var structureDone = false, statsDone = false;
+  function checkBothDone() {
+    if (structureDone && statsDone) {
+      if (STATE.streak > 0) { $('streakNum').textContent = STATE.streak; $('streakBanner').classList.remove('hidden'); }
+      $('loadingSubject').classList.add('hidden'); $('subjectMainContent').classList.remove('hidden');
+      console.log('loadSubjectStructure: 完了');
+    }
+  }
+  callGAS('getSubjectStructureLight')
+    .then(function(structure) {
+      STATE.subjectStructure = structure;
+      console.log('科目構造取得成功:', Object.keys(structure));
+      structureDone = true;
+      checkBothDone();
+    })
+    .catch(function() {
+      structureDone = true;
+      checkBothDone();
+    });
+  callGAS('getMyStats', { internalId: STATE.user.internalId })
+    .then(function(result) {
+      if (result.success) {
+        STATE.stats = result.stats;
+        STATE.streak = result.streak;
+        STATE.rankings = result.rankings;
+      }
+      statsDone = true;
+      checkBothDone();
+    })
+    .catch(function() {
+      statsDone = true;
+      checkBothDone();
+    });
+}
+
+function showSubjectPanel() {
+  if (STATE.subjectStructure && Object.keys(STATE.subjectStructure).length > 0) { $('loadingSubject').classList.add('hidden'); $('subjectMainContent').classList.remove('hidden'); }
+  else { $('loadingSubject').classList.remove('hidden'); $('subjectMainContent').classList.add('hidden'); }
+  if (STATE.streak > 0) { $('streakNum').textContent = STATE.streak; $('streakBanner').classList.remove('hidden'); }
+  else { $('streakBanner').classList.add('hidden'); }
+  showPanel('panelSubject');
+  $('statsContent').innerHTML = '<div class="no-stats"><div class="no-stats-icon">⏳</div><p>読み込み中...</p></div>';
+}
+
+function selectSubject(subject) {
+  STATE.subject = subject;
+  var s = STATE.subjectStructure[subject];
+  if (!s) { alert('この科目にはまだ利用可能な単元が登録されていません。\nSettingsシートにスプレッドシートIDを登録してください。'); return; }
+  if (!s.units || s.units.length === 0) { alert('この科目には単元が登録されていません。Settingsシートを確認してください。'); return; }
+  STATE.subjectLabel = s.label;
+  STATE.subjectQuestion = s.question;
+  document.documentElement.style.setProperty('--subject-color', s.color);
+  showUnitPanel(s);
+}
+
+function showUnitPanel(subjectData) {
+  $('unitPageTitle').textContent = subjectData.label;
+  $('unitPageSubtitle').textContent = '単元を選んでください';
+  var list = $('unitList'); 
+  list.innerHTML = '';
+  if (subjectData.exams && subjectData.exams.length > 0) {
+    var examGroup = document.createElement('div'); 
+    examGroup.className = 'unit-group';
+    examGroup.innerHTML = '<div class="unit-part">📝 考査対策</div>';
+    subjectData.exams.forEach(function(exam) {
+      var btn = document.createElement('button'); 
+      btn.className = 'exam-card';
+      btn.innerHTML = '<div class="exam-card-icon">📝</div><div class="exam-card-name">' + exam.name + '</div><div class="exam-card-info">対象単元: ' + exam.unitCount + ' / 総用語: ' + exam.totalTerms + '問</div><div class="exam-card-arrow">→</div>';
+      btn.addEventListener('click', function() { selectExam(exam.name); });
+      examGroup.appendChild(btn);
+    });
+    list.appendChild(examGroup);
+  }
+  if (!subjectData.units || subjectData.units.length === 0) {
+    list.innerHTML += '<div class="no-stats"><div class="no-stats-icon">🚧</div><p>現在準備中です</p></div>';
+    showPanel('panelUnit'); 
+    return;
+  }
+  var groups = {};
+  subjectData.units.forEach(function(u) {
+    var key = u.part + '|||' + u.chapter + '|||' + (u.section || '');
+    if (!groups[key]) groups[key] = { part: u.part, chapter: u.chapter, section: u.section, units: [] };
+    groups[key].units.push(u);
+  });
+  Object.values(groups).forEach(function(g) {
+    var groupDiv = document.createElement('div'); 
+    groupDiv.className = 'unit-group';
+    var headerHtml = '<div class="unit-part">' + g.part + '</div><div class="unit-chapter">' + g.chapter + '</div>';
+    if (g.section) headerHtml += '<div class="unit-section">' + g.section + '</div>';
+    groupDiv.innerHTML = headerHtml;
+    g.units.forEach(function(u) {
+      var btn = document.createElement('button'); 
+      btn.className = 'unit-item'; 
+      btn.style.position = 'relative';
+      btn.innerHTML = '<span class="unit-name">' + u.name + '</span><span class="unit-pages">' + u.pages + '</span><span class="unit-arrow">→</span>';
+      btn.addEventListener('click', function() { selectUnit(u); });
+      groupDiv.appendChild(btn);
+    });
+    list.appendChild(groupDiv);
+  });
+  showPanel('panelUnit');
+}
+
+function selectUnit(unit) {
+  STATE.unit = unit;
+  STATE.isExam = false;
+  callGAS('checkAnketSubmitted', { internalId: STATE.user.internalId, subject: STATE.subject, unitName: unit.name })
+    .then(function(r) {
+      STATE.anketSubmitted = r.submitted;
+      showModePanel();
+    })
+    .catch(function() {
+      STATE.anketSubmitted = false;
+      showModePanel();
+    });
+}
+
+function selectExam(examName) {
+  STATE.unit = { name: examName };
+  STATE.isExam = true;
+  STATE.anketSubmitted = false;
+  if (window._currentExamRequest) { window._currentExamRequest = null; }
+  showModePanel();
+}
+
+function showModePanel() {
+  var requestId = Date.now();
+  window._currentExamRequestId = requestId;
+  $('modePageTitle').textContent = STATE.unit.name;
+  $('modePageSubtitle').textContent = STATE.isExam ? '考査対策' : (STATE.subject + ' ' + (STATE.unit.pages || ''));
+  if (STATE.isExam) {
+    $('modeAnket').classList.add('hidden');
+  } else {
+    if (STATE.anketSubmitted) {
+      $('modeAnket').classList.remove('hidden');
+      $('modeAnket').classList.add('mode-card-anket-done');
+      $('anketDoneBadge').classList.remove('hidden');
+      $('modeAnket').style.pointerEvents = 'none';
+    } else {
+      $('modeAnket').classList.remove('hidden');
+      $('modeAnket').classList.remove('mode-card-anket-done');
+      $('anketDoneBadge').classList.add('hidden');
+      $('modeAnket').style.pointerEvents = '';
+    }
+  }
+  var examAnketBtn = $('modeExamAnket');
+  if (examAnketBtn && STATE.isExam) {
+    var examType = STATE.unit.name;
+    callGAS('isExamAnketOpen', { subject: STATE.subject, examType: examType })
+      .then(function(isOpen) {
+        if (window._currentExamRequestId !== requestId) return;
+        if (isOpen) {
+          examAnketBtn.classList.remove('hidden');
+          callGAS('checkExamAnketSubmitted', { internalId: STATE.user.internalId, subject: STATE.subject, unitName: STATE.unit.name })
+            .then(function(submitted) {
+              if (submitted) {
+                examAnketBtn.classList.add('mode-card-anket-done');
+                examAnketBtn.style.pointerEvents = 'none';
+                var badge = examAnketBtn.querySelector('.anket-done-badge');
+                if (badge) badge.classList.remove('hidden');
+              } else {
+                examAnketBtn.classList.remove('mode-card-anket-done');
+                examAnketBtn.style.pointerEvents = '';
+                var badge = examAnketBtn.querySelector('.anket-done-badge');
+                if (badge) badge.classList.add('hidden');
+              }
+            });
+        } else {
+          examAnketBtn.classList.add('hidden');
+        }
+      });
+  } else if (examAnketBtn) {
+    examAnketBtn.classList.add('hidden');
+  }
+  showPanel('panelMode');
+}
+
+function setupSubjectButtons() {
+  var koBtn = document.getElementById('subjectKo');
+  var riBtn = document.getElementById('subjectRi');
+  if (koBtn) {
+    var newKoBtn = koBtn.cloneNode(true);
+    koBtn.parentNode.replaceChild(newKoBtn, koBtn);
+    newKoBtn.addEventListener('click', function() { selectSubject('公共'); });
+  }
+  if (riBtn) {
+    var newRiBtn = riBtn.cloneNode(true);
+    riBtn.parentNode.replaceChild(newRiBtn, riBtn);
+    newRiBtn.addEventListener('click', function() { selectSubject('倫理'); });
+  }
+}
+
+function setupOtherButtons() {
+  var btnConfigs = [
+    { id: 'bigFiveBtn', handler: function() { if (!STATE.user) return; callGAS('getBigFiveData', { internalId: STATE.user.internalId }).then(function(data) { if (data) { showBigFiveResult({ E: data.E, A: data.A, C: data.C, N: data.N, O: data.O }, data.type); } else { $('bigFiveAgreeCheck').checked = false; $('startBigFiveBtn').disabled = true; showPanel('panelBigFiveIntro'); } }); } },
+    { id: 'statsFromSubjectBtn', handler: function() { showPanel('panelStats'); renderStats(); } },
+    { id: 'logoutBtn', handler: function() { STATE.user = null; localStorage.removeItem(LS_KEY); $('headerUser').classList.add('hidden'); applyAuthMode(); } },
+    { id: 'backToSubject', handler: function() { showSubjectPanel(); } },
+    { id: 'backToSubjectFromStats', handler: function() { showSubjectPanel(); } },
+    { id: 'backToUnit', handler: function() { showUnitPanel(STATE.subjectStructure[STATE.subject]); } },
+    { id: 'modeQuiz', handler: function() { showPanel('panelQuizMode'); } },
+    { id: 'modeAnket', handler: function() { if (STATE.anketSubmitted) return; buildAnketForm(); showPanel('panelAnket'); } },
+    { id: 'backToMode1', handler: function() { showModePanel(); } },
+    { id: 'backToMode2', handler: function() { showModePanel(); } },
+    { id: 'quizModeDesc', handler: function() { startQuiz('記述'); } },
+    { id: 'quizModeSelect', handler: function() { startQuiz('選択'); } },
+    { id: 'backToQuizMode', handler: function() { showPanel('panelQuizMode'); } },
+    { id: 'retryBtn', handler: function() { startQuiz(STATE.quizMode); } },
+    { id: 'backToModeFromResult', handler: function() { showModePanel(); } }
+  ];
+  btnConfigs.forEach(function(cfg) {
+    var el = $(cfg.id);
+    if (el) {
+      var newEl = el.cloneNode(true);
+      el.parentNode.replaceChild(newEl, el);
+      newEl.addEventListener('click', cfg.handler);
+    }
+  });
+}
+
+function buildAnketForm() { $('anketSubtitle').textContent = STATE.subject + ' ／ ' + STATE.unit.name; var rows = $('q3Rows'); rows.innerHTML = ''; var pairs = Q3_PAIRS.slice(); var sp = Q3_SUBJECT_PAIRS[STATE.subject]; if (sp) pairs.push(sp); pairs.forEach(function(pair) { var rowDiv = document.createElement('div'); rowDiv.className = 'dual-data-row'; var cbS = document.createElement('input'); cbS.type = 'checkbox'; cbS.name = 'q3s'; cbS.value = pair.s; var cbU = document.createElement('input'); cbU.type = 'checkbox'; cbU.name = 'q3u'; cbU.value = pair.u; cbS.addEventListener('change', function() { if (this.checked) cbU.checked = false; }); cbU.addEventListener('change', function() { if (this.checked) cbS.checked = false; }); var cellL = document.createElement('label'); cellL.className = 'dual-cell dual-cell-l'; var spanL = document.createElement('span'); spanL.textContent = pair.s; cellL.appendChild(cbS); cellL.appendChild(spanL); var cellR = document.createElement('label'); cellR.className = 'dual-cell dual-cell-r'; var spanR = document.createElement('span'); spanR.textContent = pair.u; cellR.appendChild(cbU); cellR.appendChild(spanR); rowDiv.appendChild(cellL); rowDiv.appendChild(cellR); rows.appendChild(rowDiv); }); ['q1Grid','q2Grid'].forEach(function(id) { $(id).querySelectorAll('.rating-btn').forEach(function(b) { b.classList.remove('selected'); }); }); STATE.q1Val = null; STATE.q2Val = null; ['q4Input','q5Input','q6Input','q7Input','q8Input','q9Input','q10Input'].forEach(function(id) { $(id).value = ''; }); $('agreeCheck').checked = false; hideMsg('anketMsg'); }
+function setupRatingGrid(gridId, stateKey) { $(gridId).querySelectorAll('.rating-btn').forEach(function(btn) { btn.addEventListener('click', function() { $(gridId).querySelectorAll('.rating-btn').forEach(function(b) { b.classList.remove('selected'); }); btn.classList.add('selected'); STATE[stateKey] = Number(btn.getAttribute('data-val')); }); }); }
+setupRatingGrid('q1Grid','q1Val'); setupRatingGrid('q2Grid','q2Val');
+
+function startQuiz(mode) { STATE.quizMode = mode; STATE.currentQ = 0; STATE.correct = 0; STATE.questions = []; showPanel('panelQuiz'); $('quizQuestion').textContent = '問題を読み込み中...'; $('descInputWrap').classList.remove('hidden'); $('choiceGrid').classList.add('hidden'); $('descInput').style.display = 'none'; $('descSubmitBtn').style.display = 'none'; $('feedbackArea').classList.remove('show'); $('nextBtn').classList.add('hidden'); var fetchFunc = STATE.isExam ? 'getExamQuestions' : 'getQuestions'; callGAS(fetchFunc, { subject: STATE.subject, unitName: STATE.unit.name }).then(function(r) { if (!r.success || !r.questions || r.questions.length === 0) { $('quizQuestion').textContent = '問題データが見つかりませんでした。'; return; } STATE.questions = r.questions; STATE.allQuestions = r.questions.slice(); renderQuestion(); }).catch(function() { $('quizQuestion').textContent = '問題の取得に失敗しました。'; }); }
+function renderQuestion() { var q = STATE.questions[STATE.currentQ], total = STATE.questions.length, remaining = total - STATE.currentQ; var pct = Math.round(STATE.currentQ / total * 100); $('progressBar').style.width = pct + '%'; $('progressText').textContent = (STATE.currentQ + 1) + ' / ' + total + ' （残り' + remaining + '問）'; if (remaining <= 3) { $('progressBar').style.background = 'linear-gradient(90deg, #FF6B6B, #FF4444)'; } else if (remaining <= 5) { $('progressBar').style.background = 'linear-gradient(90deg, #FFD93D, #FFB800)'; } else { $('progressBar').style.background = 'linear-gradient(90deg, var(--primary), var(--primary-light))'; } var badge = $('quizScoreBadge'), score = Number(q.score); if (score >= 3) { badge.textContent = '🔴 頻出'; badge.className = 'quiz-score-badge quiz-score-3'; } else if (score === 2) { badge.textContent = '🔵 標準'; badge.className = 'quiz-score-badge quiz-score-2'; } else { badge.textContent = '🟢 復習'; badge.className = 'quiz-score-badge quiz-score-1'; } $('quizQuestion').innerHTML = q.question.replace(/（　　　）/g, '<span class="quiz-blank">（　　　）</span>'); $('feedbackArea').classList.remove('show'); $('nextBtn').classList.add('hidden'); STATE.answered = false; if (STATE.quizMode === '記述') { $('descInputWrap').classList.remove('hidden'); $('choiceGrid').classList.add('hidden'); $('descInput').style.display = ''; $('descSubmitBtn').style.display = ''; $('descInput').value = ''; $('descInput').disabled = false; $('descSubmitBtn').disabled = false; setTimeout(function() { $('descInput').focus(); }, 100); } else { $('descInputWrap').classList.add('hidden'); $('choiceGrid').classList.remove('hidden'); buildChoices(q); } }
+function buildChoices(q) { var grid = $('choiceGrid'); grid.innerHTML = ''; var others = STATE.questions.filter(function(oq) { return oq.answer !== q.answer; }).map(function(oq) { return oq.answer; }); if (others.length < 3 && STATE.allQuestions) { var extra = STATE.allQuestions.filter(function(oq) { if (oq.answer === q.answer) return false; if (others.indexOf(oq.answer) >= 0) return false; if (oq.answer.includes(q.answer) || q.answer.includes(oq.answer)) return false; return true; }).map(function(oq) { return oq.answer; }); for (var e = 0; e < extra.length && others.length < 3; e++) { others.push(extra[e]); } } for (var i = others.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = others[i]; others[i] = others[j]; others[j] = t; } var choices = others.slice(0, 3); choices.push(q.answer); for (var i = choices.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = choices[i]; choices[i] = choices[j]; choices[j] = t; } choices.forEach(function(c) { var btn = document.createElement('button'); btn.className = 'choice-btn'; btn.textContent = c; btn.addEventListener('click', function() { if (STATE.answered) return; STATE.answered = true; grid.querySelectorAll('.choice-btn').forEach(function(b) { b.disabled = true; }); q.userAnswer = c; q.isCorrect = (c === q.answer); var fb = $('feedbackArea'); if (c === q.answer) { STATE.correct++; btn.classList.add('correct'); fb.className = 'feedback show feedback-correct'; $('feedbackTitle').textContent = '✅ 正解！'; $('feedbackAnswer').textContent = '答え：' + q.answer; } else { btn.classList.add('wrong'); grid.querySelectorAll('.choice-btn').forEach(function(b) { if (b.textContent === q.answer) b.classList.add('show-correct'); }); fb.className = 'feedback show feedback-wrong'; $('feedbackTitle').textContent = '❌ 不正解'; $('feedbackAnswer').textContent = '正しい答え：' + q.answer; } $('feedbackFurigana').textContent = q.furigana ? 'ふりがな：' + q.furigana : ''; $('nextBtn').classList.remove('hidden'); }); grid.appendChild(btn); }); }
+function submitDescAnswer(input) { STATE.answered = true; var q = STATE.questions[STATE.currentQ], result = judgeAnswer(input, q.answer); q.userAnswer = input; q.isCorrect = (result === 'correct' || result === 'partial'); $('descInput').disabled = true; $('descSubmitBtn').disabled = true; var fb = $('feedbackArea'); if (result === 'correct') { STATE.correct++; fb.className = 'feedback show feedback-correct'; $('feedbackTitle').textContent = '✅ 正解！'; $('feedbackAnswer').textContent = '答え：' + q.answer; } else if (result === 'partial') { STATE.correct++; fb.className = 'feedback show feedback-partial'; $('feedbackTitle').textContent = '🟡 惜しい！（正解扱い）'; $('feedbackAnswer').textContent = '正しい答え：' + q.answer; } else { fb.className = 'feedback show feedback-wrong'; $('feedbackTitle').textContent = '❌ 不正解'; $('feedbackAnswer').textContent = '正しい答え：' + q.answer; } $('feedbackFurigana').textContent = q.furigana ? 'ふりがな：' + q.furigana : ''; $('nextBtn').classList.remove('hidden'); }
+function showResult() { $('resultCorrect').textContent = STATE.correct; $('resultTotal').textContent = '/ ' + STATE.questions.length + '問正解'; var currentRate = Math.round(STATE.correct / STATE.questions.length * 100); var currentInternalId = STATE.user ? STATE.user.internalId : ''; var streakHtml = ''; if (STATE.streak > 0) { streakHtml = '<div class="result-streak"><div class="result-streak-icon">🔥</div><div class="result-streak-text">' + STATE.streak + '日連続達成！</div></div>'; } $('resultStreakArea').innerHTML = streakHtml; var comparisonHtml = ''; if (STATE.stats) { var currentStats = STATE.stats.find(function(s) { return s.subject === STATE.subject && s.unit === STATE.unit.name; }); if (currentStats) { var modeKey = STATE.quizMode === '記述' ? 'desc' : 'select'; var prev = currentStats[modeKey]; if (prev && prev.latest !== null) { var diff = currentRate - prev.latest; var diffText = diff >= 0 ? '+' + diff + '%' : diff + '%'; var diffColor = diff >= 0 ? '#16A34A' : '#EF4444'; comparisonHtml = '<div class="result-comparison"><div class="result-comparison-title">📈 前回との比較</div><div class="result-comparison-row">前回 ' + prev.latest + '% → 今回 ' + currentRate + '%</div><div class="result-comparison-diff" style="color:' + diffColor + ';">' + diffText + '</div>'; if (prev.best < currentRate) { comparisonHtml += '<div style="color:#16A34A;font-weight:700;">🎉 自己ベスト更新！</div>'; } else { comparisonHtml += '<div style="color:var(--text3);">自己ベスト: ' + prev.best + '%</div>'; } comparisonHtml += '</div>'; } } } $('resultComparisonArea').innerHTML = comparisonHtml; var incorrectQuestions = STATE.questions.filter(function(q) { return !q.isCorrect; }); var incorrectHtml = ''; if (incorrectQuestions.length > 0) { incorrectHtml += '<div class="card-sm"><div class="anket-q-label">🔍 復習が必要な用語</div>'; incorrectQuestions.forEach(function(q) { incorrectHtml += '<div class="result-incorrect-item"><span class="result-incorrect-user">❌ ' + (q.userAnswer || '未回答') + '</span><span class="result-incorrect-arrow"> → </span><span class="result-incorrect-correct">' + q.answer + '</span>'; if (q.furigana) incorrectHtml += '<span style="font-size:0.75rem;color:var(--text3);margin-left:4px;">（' + q.furigana + '）</span>'; incorrectHtml += '</div>'; }); incorrectHtml += '</div>'; incorrectHtml += '<button class="btn btn-accent" id="retryIncorrectBtn" style="margin-top:12px;">🔄 間違えた' + incorrectQuestions.length + '問だけ再チャレンジ</button>'; } $('resultIncorrectArea').innerHTML = incorrectHtml; if (incorrectQuestions.length > 0) { setTimeout(function() { $('retryIncorrectBtn').addEventListener('click', function() { STATE.questions = shuffleArrayLocal(incorrectQuestions); STATE.currentQ = 0; STATE.correct = 0; STATE.answered = false; showPanel('panelQuiz'); renderQuestion(); }); }, 100); } callGAS('saveRecord', { internalId: currentInternalId, subject: STATE.subject, unitName: STATE.unit.name, mode: STATE.quizMode, totalQ: STATE.questions.length, correct: STATE.correct }).then(function() { callGAS('getMyStats', { internalId: currentInternalId }).then(function(r) { if (r.success) { STATE.stats = r.stats; STATE.rankings = r.rankings; STATE.streak = r.streak; } updateResultRanking(); }).catch(function() { updateResultRanking(); }); }).catch(function() { updateResultRanking(); }); showPanel('panelResult'); }
+function shuffleArrayLocal(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+function updateResultRanking() { var key = STATE.subject + '___' + STATE.unit.name; var rank = STATE.rankings[key]; if (rank && rank.total > 0) { $('resultRankVal').textContent = rank.total + '人中 ' + rank.myRank + '位（取り組み ' + rank.myCount + '回）'; } else { $('resultRankVal').textContent = '初回取り組み！'; } }
+function renderStats() { var content = $('statsContent'); if (!STATE.stats || STATE.stats.length === 0) { content.innerHTML = '<div class="no-stats"><div class="no-stats-icon">📭</div><p>まだ取り組み記録がありません</p></div>'; return; } var html = ''; STATE.stats.forEach(function(s) { var key = s.subject + '___' + s.unit, rank = STATE.rankings[key]; html += '<div class="stats-unit-card"><div class="stats-unit-name">' + s.subject + ' ／ ' + s.unit + '</div>'; html += '<div class="stats-row"><span class="stats-key">取り組み回数</span><span class="stats-val">' + s.totalAttempts + '回</span></div>'; if (s.lastAttempted) { var d = new Date(s.lastAttempted); html += '<div class="stats-row"><span class="stats-key">最終取り組み日</span><span class="stats-val">' + (d.getMonth()+1) + '/' + d.getDate() + '</span></div>'; } if (s.desc && s.desc.attempts > 0) { html += '<div class="stats-row"><span class="stats-key">記述　最高正答率</span><span class="stats-val">' + s.desc.best + '%</span></div>'; html += '<div class="stats-row"><span class="stats-key">記述　直近正答率</span><span class="stats-val">' + s.desc.latest + '%</span></div>'; } if (s.select && s.select.attempts > 0) { html += '<div class="stats-row"><span class="stats-key">選択　最高正答率</span><span class="stats-val">' + s.select.best + '%</span></div>'; html += '<div class="stats-row"><span class="stats-key">選択　直近正答率</span><span class="stats-val">' + s.select.latest + '%</span></div>'; } if (rank) { html += '<div class="stats-rank"><div class="stats-rank-label">クラス内ランキング（取り組み回数）</div><div class="stats-rank-val">' + rank.total + '人中 ' + rank.myRank + '位（' + rank.myCount + '回）</div></div>'; } html += '</div>'; }); content.innerHTML = html; }
+
+function showExamAnketPanel() {
+  $('examAnketSubtitle').textContent = STATE.subject + ' ／ ' + STATE.unit.name;
+  var rows = $('examQ3Rows');
+  rows.innerHTML = '';
+  EXAM_Q3_PAIRS.forEach(function(pair) {
+    var rowDiv = document.createElement('div');
+    rowDiv.className = 'dual-data-row';
+    var cbS = document.createElement('input'); cbS.type = 'checkbox'; cbS.name = 'examQ3s'; cbS.value = pair.s;
+    var cbU = document.createElement('input'); cbU.type = 'checkbox'; cbU.name = 'examQ3u'; cbU.value = pair.u;
+    cbS.addEventListener('change', function() { if (this.checked) cbU.checked = false; });
+    cbU.addEventListener('change', function() { if (this.checked) cbS.checked = false; });
+    var cellL = document.createElement('label'); cellL.className = 'dual-cell dual-cell-l'; cellL.appendChild(cbS); cellL.appendChild(document.createTextNode(pair.s));
+    var cellR = document.createElement('label'); cellR.className = 'dual-cell dual-cell-r'; cellR.appendChild(cbU); cellR.appendChild(document.createTextNode(pair.u));
+    rowDiv.appendChild(cellL); rowDiv.appendChild(cellR);
+    rows.appendChild(rowDiv);
+  });
+  var storyContainer = document.getElementById('examStoryContainer');
+  if (!storyContainer) {
+    var dualWrap = document.querySelector('#panelExamAnket .dual-wrap');
+    var storyHeader = document.createElement('div'); storyHeader.className = 'dual-header-row'; storyHeader.style.marginTop = '20px'; storyHeader.style.borderTop = '1px solid var(--border)';
+    storyHeader.innerHTML = '<div class="dual-col-header dual-col-satisfied">😊 面白かった</div><div class="dual-col-header dual-col-unsatisfied">😔 つまらなかった</div>';
+    dualWrap.parentNode.appendChild(storyHeader);
+    var storyRow = document.createElement('div'); storyRow.className = 'dual-data-row'; storyRow.id = 'examStoryContainer';
+    var cellL2 = document.createElement('label'); cellL2.className = 'dual-cell dual-cell-l';
+    var cbStoryS = document.createElement('input'); cbStoryS.type = 'checkbox'; cbStoryS.name = 'examStory'; cbStoryS.value = '面白かった';
+    var cbStoryU = document.createElement('input'); cbStoryU.type = 'checkbox'; cbStoryU.name = 'examStory'; cbStoryU.value = 'つまらなかった';
+    cbStoryS.addEventListener('change', function() { if (this.checked) cbStoryU.checked = false; STATE.examStoryVal = this.checked ? '面白かった' : null; });
+    cbStoryU.addEventListener('change', function() { if (this.checked) cbStoryS.checked = false; STATE.examStoryVal = this.checked ? 'つまらなかった' : null; });
+    cellL2.appendChild(cbStoryS); cellL2.appendChild(document.createTextNode('試験で読んだストーリーは面白かった'));
+    var cellR2 = document.createElement('label'); cellR2.className = 'dual-cell dual-cell-r';
+    cellR2.appendChild(cbStoryU); cellR2.appendChild(document.createTextNode('試験で読んだストーリーはつまらなかった'));
+    storyRow.appendChild(cellL2); storyRow.appendChild(cellR2);
+    dualWrap.parentNode.appendChild(storyRow);
+  }
+  document.querySelectorAll('input[name="examStory"]').forEach(function(cb) { cb.checked = false; });
+  STATE.examStoryVal = null;
+  ['examQ1Grid','examQ2Grid'].forEach(function(id) { var btns = $(id).querySelectorAll('.rating-btn'); if(btns) btns.forEach(function(b) { b.classList.remove('selected'); }); });
+  STATE.examQ1Val = null; STATE.examQ2Val = null;
+  ['examQ4Input','examQ5Input','examQ6Input','examQ7Input','examQ8Input','examQ9Input','examQ10Input'].forEach(function(id) { if($(id)) $(id).value = ''; });
+  if($('examAgreeCheck')) $('examAgreeCheck').checked = false;
+  if($('examAnketMsg')) hideMsg('examAnketMsg');
+  showPanel('panelExamAnket');
+}
+
+function submitExamAnketHandler() {
+  if (!STATE.user || !STATE.user.internalId || !STATE.subject || !STATE.unit || !STATE.unit.name) { showMsg('examAnketMsg','セッションが切れています。','error'); return; }
+  if (!STATE.examQ1Val) { showMsg('examAnketMsg','Q1を選択してください','error'); return; }
+  if (!STATE.examQ2Val) { showMsg('examAnketMsg','Q2を選択してください','error'); return; }
+  var q3s = Array.from(document.querySelectorAll('input[name="examQ3s"]:checked')).map(function(i){return i.value;});
+  var q3u = Array.from(document.querySelectorAll('input[name="examQ3u"]:checked')).map(function(i){return i.value;});
+  if (q3s.length===0 && q3u.length===0) { showMsg('examAnketMsg','Q3を1つ以上選択してください','error'); return; }
+  var q5val = $('examQ5Input').value.trim();
+  if (!q5val) { showMsg('examAnketMsg','Q5は必須です','error'); return; }
+  if (!$('examAgreeCheck').checked) { showMsg('examAnketMsg','同意にチェックを入れてください','error'); return; }
+  hideMsg('examAnketMsg'); $('examAnketSubmitBtn').disabled = true;
+  var payload = { internalId: STATE.user.internalId, grade: STATE.user.grade, classNum: STATE.user.classNum, number: STATE.user.number, lastName: STATE.user.lastName, firstName: STATE.user.firstName, lastKana: STATE.user.lastKana, firstKana: STATE.user.firstKana, subject: STATE.subject, unit: STATE.unit.name, q1: STATE.examQ1Val, q2: STATE.examQ2Val, q3satisfied: q3s, q3unsatisfied: q3u, q4: $('examQ4Input').value, q5: q5val, q6: $('examQ6Input').value, q7: $('examQ7Input').value, q8: $('examQ8Input').value, q9: $('examQ9Input').value, q10: $('examQ10Input').value, agreed: true };
+  callGAS('submitExamAnket', payload).then(function(r) { $('examAnketSubmitBtn').disabled = false; if(r.success){showMsg('examAnketMsg',r.message,'success');setTimeout(showModePanel,1500);}else{showMsg('examAnketMsg',r.message,'error');} }).catch(function(){ $('examAnketSubmitBtn').disabled = false; showMsg('examAnketMsg','通信エラー','error'); });
+}
+
+function setupExamRatingGrid(gridId, stateKey) { var grid=$(gridId); if(!grid)return; grid.querySelectorAll('.rating-btn').forEach(function(btn){ btn.addEventListener('click',function(){ grid.querySelectorAll('.rating-btn').forEach(function(b){b.classList.remove('selected');}); btn.classList.add('selected'); STATE[stateKey]=Number(btn.getAttribute('data-val')); }); }); }
+function setupExamAnketEventListeners() { var b=$('modeExamAnket'); if(b)b.addEventListener('click',showExamAnketPanel); var bb=$('backToModeFromExamAnket'); if(bb)bb.addEventListener('click',showModePanel); var sb=$('examAnketSubmitBtn'); if(sb)sb.addEventListener('click',submitExamAnketHandler); setupExamRatingGrid('examQ1Grid','examQ1Val'); setupExamRatingGrid('examQ2Grid','examQ2Val'); }
+
+var BIGFIVE_QUESTIONS = [{text:'友だちとワイワイ話すのが好きだ',factor:'E',reverse:false},{text:'ひとりでいるほうが好きだ',factor:'E',reverse:true},{text:'まわりの人とゆずり合うほうだ',factor:'A',reverse:false},{text:'自分の意見をはっきり言うほうだ',factor:'A',reverse:true},{text:'やるべきことはすぐにとりかかる',factor:'C',reverse:false},{text:'計画を立てるのは苦手だ',factor:'C',reverse:true},{text:'テストの前は不安でいっぱいになる',factor:'N',reverse:true},{text:'小さなことでも気にしやすい',factor:'N',reverse:true},{text:'新しいやり方を試すのが好きだ',factor:'O',reverse:false},{text:'ふだんとちがうやり方は不安だ',factor:'O',reverse:true}];
+var BIGFIVE_TYPES = [{name:'社交的探究タイプ',cond:function(s){return s.E>=5&&s.O>=5;},icon:'🦜',desc:'人との交流や新しいアイデアから刺激を受けるタイプです。',advice:'友達と教え合ったり、ディスカッション形式の復習が効果的。',caution:'一人の時間も大切に。'},{name:'コツコツ計画タイプ',cond:function(s){return s.C>=5&&s.N<=3;},icon:'🐢',desc:'計画を立てて着実に実行できるタイプです。',advice:'長期的な学習計画表の作成が向いています。',caution:'ときには柔軟に。'},{name:'にぎやか気分屋タイプ',cond:function(s){return s.E>=5&&s.C<=3;},icon:'🐒',desc:'楽しい雰囲気を好み、計画的な勉強は少し苦手。',advice:'友達との勉強会を定例化する。',caution:'誘惑に負けやすい環境を避けましょう。'},{name:'一人探究タイプ',cond:function(s){return s.E<=3&&s.O>=5;},icon:'🦉',desc:'自分の内面や深い思考を大切にするタイプです。',advice:'ノートをアートのようにまとめる。',caution:'時には先生や友達に考えを話すことも大切。'},{name:'慎重サポータータイプ',cond:function(s){return s.A>=5&&s.N>=5;},icon:'🐶',desc:'他者を助けることに熱心ですが、不安を感じやすい。',advice:'安心できる小グループでの学習。',caution:'完璧主義になりすぎない。'},{name:'のんびり安定タイプ',cond:function(s){return s.N<=3&&s.O<=3;},icon:'🐱',desc:'落ち着いていて、決まったやり方を好むタイプです。',advice:'ルーティン化された学習スタイル。',caution:'たまには新しい学習法にも挑戦。'},{name:'バランスタイプ',cond:function(s){return true;},icon:'🌟',desc:'どの傾向も平均的でバランスのとれたタイプです。',advice:'いろいろな学習法を試してみましょう。',caution:'軸となる習慣を一つ決めると良いです。'}];
+var STATE_BIGFIVE = {answers:new Array(10).fill(null),submitted:false};
+function renderBigFiveQuestions(){var container=$('bigFiveQuestionsContainer');container.innerHTML='';STATE_BIGFIVE.answers=new Array(10).fill(null);BIGFIVE_QUESTIONS.forEach(function(q,idx){var card=document.createElement('div');card.className='card-sm';card.innerHTML='<p class="unit-name" style="margin-bottom:12px;">'+(idx+1)+'. '+q.text+'</p>';var grid=document.createElement('div');grid.className='rating-grid-7';for(var v=1;v<=7;v++){var btn=document.createElement('button');btn.className='rating-btn';btn.innerHTML='<span class="rating-num">'+v+'</span>';btn.setAttribute('data-value',v);btn.addEventListener('click',(function(i,value){return function(e){var allBtns=this.parentNode.querySelectorAll('.rating-btn');allBtns.forEach(function(b){b.classList.remove('selected');});this.classList.add('selected');STATE_BIGFIVE.answers[i]=value;checkAllBigFiveAnswered();};})(idx,v));grid.appendChild(btn);}card.appendChild(grid);container.appendChild(card);});$('submitBigFiveBtn').disabled=true;}
+function checkAllBigFiveAnswered(){var all=STATE_BIGFIVE.answers.every(function(a){return a!==null;});$('submitBigFiveBtn').disabled=!all;}
+function calculateBigFiveScores(answers){var sums={E:0,A:0,C:0,N:0,O:0},cnt={E:0,A:0,C:0,N:0,O:0};answers.forEach(function(val,idx){var q=BIGFIVE_QUESTIONS[idx];var score=q.reverse?(8-val):val;sums[q.factor]+=score;cnt[q.factor]++;});var avg={};for(var f in sums){avg[f]=cnt[f]?parseFloat((sums[f]/cnt[f]).toFixed(1)):0;}return avg;}
+function determineBigFiveType(scores){for(var i=0;i<BIGFIVE_TYPES.length;i++){if(BIGFIVE_TYPES[i].cond(scores))return BIGFIVE_TYPES[i];}return BIGFIVE_TYPES[BIGFIVE_TYPES.length-1];}
+function showBigFiveResult(scores,typeName){var type=BIGFIVE_TYPES.find(function(t){return t.name===typeName;})||BIGFIVE_TYPES[BIGFIVE_TYPES.length-1];callGAS('getBigFiveSummary').then(function(summary){renderBigFiveResult(scores,type,summary);});showPanel('panelBigFiveResult');}
+function renderBigFiveResult(scores,type,summary){var html='';html+='<div class="card" style="text-align:center;"><div style="font-size:3rem;">'+type.icon+'</div><p class="page-title" style="font-size:1.4rem;">'+type.name+'</p><p style="font-size:0.9rem;color:var(--text2);">'+type.desc+'</p></div>';html+='<div class="card-sm"><div class="anket-q-label">おすすめ勉強法</div><p style="font-size:0.9rem;">'+type.advice+'</p></div>';html+='<div class="card-sm"><div class="anket-q-label">注意点</div><p style="font-size:0.9rem;">'+type.caution+'</p></div>';html+='<div class="card-sm"><div class="anket-q-label">あなたの傾向</div>';var labels={E:'外向性',A:'協調性',C:'勤勉性',N:'情緒安定性',O:'開放性'};for(var f in labels){var score=scores[f]||0;var level=score>=5?'高め':(score<=3?'低め':'中程度');html+='<div style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;font-size:0.85rem;"><span>'+labels[f]+'</span><span>'+score+' / 7 ('+level+')</span></div><div class="bar-wrap"><div class="bar-fill" style="width:'+(score/7*100)+'%;background:var(--primary-light);"></div></div></div>';}html+='</div>';if(summary&&summary.totalStudents>0){html+='<div class="card-sm"><div class="anket-q-label">クラスのタイプ分布（受検者'+summary.totalStudents+'人中）</div>';var sorted=Object.keys(summary.typeCounts).sort(function(a,b){return summary.typeCounts[b]-summary.typeCounts[a];});sorted.forEach(function(t){var cnt=summary.typeCounts[t];var pct=Math.round(cnt/summary.totalStudents*100);html+='<div style="margin-bottom:6px;"><div class="bar-type"><span>'+t+'</span><span>'+cnt+'人</span></div><div class="bar-wrap"><div class="bar-fill" style="width:'+pct+'%;background:var(--accent3);"></div></div></div>';});html+='</div>';}$('bigFiveResultContent').innerHTML=html;}
+
+function applyAuthMode() { showPanel('panelAuth'); $('authLoginView').classList.remove('hidden'); $('authRegisterView').classList.add('hidden'); restoreSimpleLoginState(); }
+function show503() { document.title='503 Service Unavailable'; showPanel('panel503'); }
+function switchToLogin() { $('authRegisterView').classList.add('hidden'); $('authLoginView').classList.remove('hidden'); }
+
+// イベントリスナー
+$('loginBtn').addEventListener('click',function(){var grade=$('loginGrade').value,cls=$('loginClass').value,numStr=$('loginNumber').value.trim(),pass=$('loginPassword').value;if(!grade||!cls){showMsg('loginMsg','学年とクラスを選択してください','error');return;}var num=parseInt(numStr,10);if(isNaN(num)||num<1||num>35){showMsg('loginMsg','出席番号は1〜35で入力してください','error');return;}if(!pass){showMsg('loginMsg','パスワードを入力してください','error');return;}var uname=String(grade)+'-'+String(cls)+'-'+String(num);hideMsg('loginMsg');$('loginBtn').disabled=true;$('loginBtn').textContent='ログイン中...';callGAS('loginUser',{username:uname,password:pass}).then(function(r){$('loginBtn').disabled=false;$('loginBtn').textContent='ログイン';if(r.success){STATE.user=r.userInfo;localStorage.setItem(LS_KEY,JSON.stringify(r.userInfo));$('headerUser').textContent=r.userInfo.firstKana+'さん';$('headerUser').classList.remove('hidden');var checkEl=$('simpleLoginCheck');if(checkEl.checked){var saved=loadSavedLogin();var displayName=saved?saved.displayName:r.userInfo.firstKana;saveLoginInfo(Number(grade),Number(cls),num,pass,displayName);loadSubjectStructure();}else{askSaveLoginThenProceed(Number(grade),Number(cls),num,pass,r.userInfo.firstKana);}}else{showMsg('loginMsg',r.message,'error');}}).catch(function(){$('loginBtn').disabled=false;$('loginBtn').textContent='ログイン';showMsg('loginMsg','通信エラー','error');});});
+$('simpleLoginCheck').addEventListener('change',function(){var saved=loadSavedLogin();if(this.checked&&saved){autoFillLogin(saved);}else if(!this.checked){clearLoginForm();}});
+$('deleteSavedLogin').addEventListener('click',function(){if(confirm('保存されたログイン情報を削除しますか？')){clearSavedLogin();clearLoginForm();restoreSimpleLoginState();showMsg('loginMsg','保存情報を削除しました','success');setTimeout(function(){hideMsg('loginMsg');},2000);}});
+$('toRegBtn').addEventListener('click',function(){$('authLoginView').classList.add('hidden');$('authRegisterView').classList.remove('hidden');});
+$('backToLoginFromReg').addEventListener('click',function(){$('authRegisterView').classList.add('hidden');$('authLoginView').classList.remove('hidden');hideMsg('regMsg');});
+$('regBtn').addEventListener('click',function(){var v=validateRegistration();if(!v)return;hideMsg('regMsg');callGAS('registerUser',{username:v.uname,password:v.pass,grade:v.grade,classNum:v.cls,number:v.num,lastName:v.lastName,firstName:v.firstName,lastKana:v.lastKana,firstKana:v.firstKana}).then(function(r){if(r.success){callGAS('loginUser',{username:v.uname,password:v.pass}).then(function(lr){if(lr.success){STATE.user=lr.userInfo;localStorage.setItem(LS_KEY,JSON.stringify(lr.userInfo));$('headerUser').textContent=lr.userInfo.firstKana+'さん';$('headerUser').classList.remove('hidden');askSaveLoginThenProceed(v.grade,v.cls,v.num,v.pass,lr.userInfo.firstKana);}else{showMsg('regMsg','登録しましたが自動ログインに失敗しました','error');switchToLogin();}}).catch(function(){showMsg('regMsg','登録しましたが自動ログインに失敗しました','error');switchToLogin();});}else{showMsg('regMsg',r.message,'error');}}).catch(function(){showMsg('regMsg','通信エラー','error');});});
+$('backToModeFromResult').addEventListener('click',showModePanel);
+$('descSubmitBtn').addEventListener('click',function(){if(STATE.answered)return;var v=$('descInput').value;if(v.trim())submitDescAnswer(v);});
+$('descInput').addEventListener('keydown',function(e){if(e.key==='Enter'&&!STATE.answered){var v=$('descInput').value;if(v.trim())submitDescAnswer(v);}});
+$('nextBtn').addEventListener('click',function(){STATE.currentQ++;if(STATE.currentQ>=STATE.questions.length)showResult();else renderQuestion();});
+$('retryBtn').addEventListener('click',function(){startQuiz(STATE.quizMode);});
+$('anketSubmitBtn').addEventListener('click',function(){if(!STATE.user||!STATE.user.internalId||!STATE.subject||!STATE.unit||!STATE.unit.name){showMsg('anketMsg','セッションが切れています。','error');return;}if(!STATE.q1Val){showMsg('anketMsg','Q1を選択してください','error');return;}if(!STATE.q2Val){showMsg('anketMsg','Q2を選択してください','error');return;}var q3s=Array.from(document.querySelectorAll('input[name="q3s"]:checked')).map(function(i){return i.value;});var q3u=Array.from(document.querySelectorAll('input[name="q3u"]:checked')).map(function(i){return i.value;});if(q3s.length===0&&q3u.length===0){showMsg('anketMsg','Q3を1つ以上選択してください','error');return;}var q5val=$('q5Input').value.trim();if(!q5val){showMsg('anketMsg','Q5は必須です','error');return;}if(!$('agreeCheck').checked){showMsg('anketMsg','同意にチェックを入れてください','error');return;}hideMsg('anketMsg');$('anketSubmitBtn').disabled=true;var payload={internalId:STATE.user.internalId,username:STATE.user.username,grade:STATE.user.grade,classNum:STATE.user.classNum,number:STATE.user.number,lastName:STATE.user.lastName,firstName:STATE.user.firstName,lastKana:STATE.user.lastKana,firstKana:STATE.user.firstKana,subject:STATE.subject,unit:STATE.unit.name,q1:STATE.q1Val,q2:STATE.q2Val,q3satisfied:q3s,q3unsatisfied:q3u,q4:$('q4Input').value,q5:q5val,q6:$('q6Input').value,q7:$('q7Input').value,q8:$('q8Input').value,q9:$('q9Input').value,q10:$('q10Input').value,agreed:true};callGAS('submitAnket',payload).then(function(r){$('anketSubmitBtn').disabled=false;if(r.success){STATE.anketSubmitted=true;showMsg('anketMsg',r.message,'success');setTimeout(showModePanel,1500);}else{showMsg('anketMsg',r.message,'error');}}).catch(function(){$('anketSubmitBtn').disabled=false;showMsg('anketMsg','通信エラー','error');});});
+$('submitBigFiveBtn').addEventListener('click',function(){var scores=calculateBigFiveScores(STATE_BIGFIVE.answers);var type=determineBigFiveType(scores);callGAS('saveBigFive',{internalId:STATE.user.internalId,scores:scores,typeName:type.name});showBigFiveResult(scores,type.name);});
+
+function initializeApp() {
+  var saved = localStorage.getItem(LS_KEY);
+  if (saved) { try { STATE.user = JSON.parse(saved); } catch(e) {} }
+  if (STATE.user) { $('headerUser').textContent = STATE.user.firstKana + 'さん'; $('headerUser').classList.remove('hidden'); loadSubjectStructure(); } else { applyAuthMode(); }
+  setupSubjectButtons();
+  setupOtherButtons();
+  setupExamAnketEventListeners();
+}
+
+if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', initializeApp); } else { initializeApp(); }
+</script>
+</body>
+</html>
